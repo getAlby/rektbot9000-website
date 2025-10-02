@@ -5,13 +5,22 @@
 html,
 body {
   height: 100%;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #1a0a16 0%, #050105 65%, #010101 100%);
+  background: #000000; /* base solid background to avoid visible seam */
   color: #ff71cd;
 }
 
 body {
   font-family: "Noto Mono for Powerline", "Noto Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Fixed gradient overlay that follows scroll and full page height */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(circle at top, #1a0a16 0%, #050105 65%, #010101 100%);
 }
 
 .animate-terminal-cursor {
