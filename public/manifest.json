@@ -1,0 +1,10 @@
+{
+  "name": "Rektbot 9000 Dashboard",
+  "short_name": "Rektbot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffe1ff",
+  "theme_color": "#ff61d4",
+  "icons": []
+}
+

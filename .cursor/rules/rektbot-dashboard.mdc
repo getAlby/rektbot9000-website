@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+description: Next.js Shadcn/Nostr Dashboard Expert guidelines
+---
+
+# Rektbot 9000 Dashboard Guidelines
+
+- Stack: Next.js App Router (13+), React 18+, TypeScript, Tailwind CSS, shadcn/ui, Recharts, Nostr Dev Kit.
+- Design: fun chaotic cartoon energy with bright pink/green/purple palette; responsive mobile-first; rely on shadcn/ui primitives for layout consistency.
+- Data: subscribe to Nostr relays (e.g., `wss://relay.damus.io`) via Nostr Dev Kit using pubkey `npub1r3ktgeesy2v7pckprwp4ye2zhca6f0jqkqgre5d9pp0c8z2le33q65dae4`; keep live updates.
+- Parsing: balance updates feed balance history chart; BUY/SELL notes feed trades chart and list.
+- Charts: use shadcn-wrapped Recharts components; include a balance line chart and green/red trade chart (bar or scatter).
+- Trades list: accessible table showing timestamp, type, sats amount, resulting balance.
+- Lightning: embed `<lightning-widget>` with `https://embed.twentyuno.net/js/app.js` script to enable tipping.
+- Copy: bold intro that explains Rektbot 9000, the public Nostr feed, and the bot “dies” at zero balance.

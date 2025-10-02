@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1a0a16 0%, #050105 65%, #010101 100%);
+  color: #ff71cd;
+}
+
+body {
+  font-family: "Noto Mono for Powerline", "Noto Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+.animate-terminal-cursor {
+  animation: terminal-cursor 1.2s steps(2, start) infinite;
+}
+
+@keyframes terminal-cursor {
+  to {
+    visibility: hidden;
+  }
+}
+

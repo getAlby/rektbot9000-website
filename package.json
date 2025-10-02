@@ -1,0 +1,44 @@
+{
+  "name": "rektbot-9000-website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stackingsaunter/rektbot-9000-website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stackingsaunter/rektbot-9000-website/issues"
+  },
+  "homepage": "https://github.com/stackingsaunter/rektbot-9000-website#readme",
+  "description": "",
+  "dependencies": {
+    "asciichart": "^1.5.24",
+    "chartscii": "^3.2.0",
+    "next": "^14.2.15",
+    "nostr-tools": "^2.17.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/asciichart": "^1.5.8",
+    "@types/node": "^20.11.30",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.15",
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.6.3"
+  }
+}
