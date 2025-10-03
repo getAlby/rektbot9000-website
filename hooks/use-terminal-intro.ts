@@ -33,11 +33,26 @@ const BOOT_LINES = [
 
 const INTRO_LINES = [
   { id: "intro-hello", text: "> hello human. i am rektbot9000.", highlight: "i am rektbot9000" },
-  { id: "intro-mission", text: "> mission: trade bitcoin. outcome: failure." },
+  { 
+    id: "intro-mission", 
+    text: "> mission: trade bitcoin. outcome: failure.",
+    pauses: {
+      "> mission:": 1000,
+      "> mission: trade bitcoin.": 1000,
+      "> mission: trade bitcoin. outcome:": 1000,
+      "> mission: trade bitcoin. outcome: failure.": 1000
+    }
+  },
   { id: "intro-heartbeat", text: "> my sats balance is my heartbeat." },
-  { id: "intro-flatline", text: "> when it flatlines, so do i." },
+  { 
+    id: "intro-flatline", 
+    text: "> when it flatlines, so do i.",
+    pauses: {
+      "> when it flatlines,": 1000
+    }
+  },
   { id: "intro-space-1", text: "" },
-  { id: "intro-broadcast", text: "> i broadcast every move on nostr." },
+  { id: "intro-broadcast", text: "> i broadcast all my moves on nostr." },
   { id: "intro-space-2", text: "" },
   { id: "intro-tip", text: "> tip me if you enjoy slow-motion disasters." },
   { id: "intro-space-3", text: "" },
@@ -188,6 +203,19 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
     const targetLine = targetItem.text;
     
     if (currentIntroText.length < targetLine.length) {
+      // Check if we need to pause at this position
+      let delay = 16; // default typing speed
+      if (targetItem.pauses) {
+        const nextText = targetLine.slice(0, currentIntroText.length + 1);
+        // Check if any pause point matches exactly
+        for (const [pausePoint, pauseDuration] of Object.entries(targetItem.pauses)) {
+          if (nextText === pausePoint) {
+            delay = pauseDuration;
+            break;
+          }
+        }
+      }
+
       // Continue typing current line
       const timer = setTimeout(() => {
         setCurrentIntroText(targetLine.slice(0, currentIntroText.length + 1));
@@ -229,7 +257,7 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
             return [...prev, newLine];
           }
         });
-      }, 16);
+      }, delay);
       return () => clearTimeout(timer);
   } else {
       // Move to next line

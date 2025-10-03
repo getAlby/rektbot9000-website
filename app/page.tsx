@@ -59,7 +59,7 @@ export default function Page() {
       },
     ];
 
-    printLinesSlowly(lines, 144); // 120 * 1.2 = 144
+    printLinesSlowly(lines, 173); // 144 * 1.2 = 172.8 ≈ 173
   }, [printedProfile, printLinesSlowly]);
 
   const handleShowTrades = useCallback(() => {
@@ -107,7 +107,7 @@ export default function Page() {
         });
     }
 
-    printLinesSlowly(lines, 108); // 90 * 1.2 = 108
+    printLinesSlowly(lines, 130); // 108 * 1.2 = 129.6 ≈ 130
   }, [printedTrades, printLinesSlowly, terminalTrades]);
 
   const handleShowTip = useCallback(() => {
@@ -155,7 +155,7 @@ export default function Page() {
       { type: "text", content: "##########################################################################" },
       { type: "text", content: "##########################################################################" },
       { type: "text", content: "##########################################################################" },
-    ], 132); // 110 * 1.2 = 132
+    ], 158); // 132 * 1.2 = 158.4 ≈ 158
   }, [printLinesSlowly, printedTip]);
 
   return (

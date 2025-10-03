@@ -19,6 +19,8 @@ export default function BalanceChart({ data }: Props) {
       .slice(-MAX_BALANCE_POINTS)
       .map((point) => point.balance);
 
+    console.log("📊 Chart data points:", series.length, "Latest:", series[series.length - 1]);
+
     // Ensure we have at least 2 data points for asciichart
     const padded = series.length < 2 ? [...series, series[0]] : series;
 
