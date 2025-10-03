@@ -11,18 +11,15 @@ type TerminalLine = {
 
 const COMMAND = "rektbot9000@alby:~$ ./rektbot9000 --panic";
 const ASCII_ART = [
-  "    ____   ______ __ __ ______ ____   ____  ______",
-  "   / __ \\ / ____// //_//_  __// __ ) / __ \\/_  __/",
-  "  / /_/ // __/  / ,<    / /  / __  |/ / / / / /   ",
-  " / _, _// /___ / /| |  / /  / /_/ // /_/ / / /    ",
-  "/_/ |_|/_____//_/ |_| /_/  /_____/ \\____/ /_/     ",
-  "                                                  ",
-  "   ____   ____   ____   ____                      ",
-  "  / __ \\ / __ \\ / __ \\ / __ \\                     ",
-  " / /_/ // / / // / / // / / /                     ",
-  " \\__, // /_/ // /_/ // /_/ /                      ",
-  "/____/ \\____/ \\____/ \\____/                       ",
-  "                                                  ",
+  "   ___   ____ __ __ ______ ___   ____  ______",
+  "  / _ \\ / __// //_//_  __// _ ) / __ \\/_  __/",
+  " / , _// _/ / ,<    / /  / _  |/ /_/ / / /   ",
+  "/_/|_|/___//_/|_|  /_/  /____/ \\____/ /_/    ",
+  "  ___   ___   ___   ___                      ",
+  " / _ \\ / _ \\ / _ \\ / _ \\                     ",
+  " \\_, // // // // // // /                     ",
+  "/___/ \\___/ \\___/ \\___/                      ",
+  "                                             ",
 ];
 
 const BOOT_LINES = [
@@ -35,12 +32,16 @@ const BOOT_LINES = [
 ];
 
 const INTRO_LINES = [
-  "> hello human. i am rektbot 9000.",
-  "> mission: trade bitcoin. outcome: failure.",
-  "> my sats balance is my heartbeat.",
-  "> when it flatlines, so do i.",
-  "> every move broadcast on nostr.",
-  "> tip me if you enjoy slow-motion disasters.",
+  { id: "intro-hello", text: "> hello human. i am rektbot9000.", highlight: "i am rektbot9000" },
+  { id: "intro-mission", text: "> mission: trade bitcoin. outcome: failure." },
+  { id: "intro-heartbeat", text: "> my sats balance is my heartbeat." },
+  { id: "intro-flatline", text: "> when it flatlines, so do i." },
+  { id: "intro-space-1", text: "" },
+  { id: "intro-broadcast", text: "> i broadcast every move on nostr." },
+  { id: "intro-space-2", text: "" },
+  { id: "intro-tip", text: "> tip me if you enjoy slow-motion disasters." },
+  { id: "intro-space-3", text: "" },
+  { id: "intro-plead", text: "> please don't laugh at my terrible financial decisions." },
 ];
 
 const NOSTR_STATUS_ID = "boot-2";
@@ -50,7 +51,7 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
   const [commandDone, setCommandDone] = useState(false);
   const [lines, setLines] = useState<TerminalLine[]>([]);
   const [introComplete, setIntroComplete] = useState(false);
-  const [currentIntroLine, setCurrentIntroLine] = useState(0);
+  const [currentIntroLine, setCurrentIntroLine] = useState(-1); // Start at -1 to prevent early typing
   const [currentIntroText, setCurrentIntroText] = useState("");
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
       );
     });
 
-    // Print boot sequence
+    // Print boot sequence - keep under ASCII banner
     BOOT_LINES.forEach((bootLine, idx) => {
       delay += 180;
       timers.push(
@@ -116,8 +117,8 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
       );
     });
 
-    // Add empty line after boot sequence
-    delay += 180;
+    // Add empty line after boot sequence AND ONLY THEN start intro typing
+    delay += 300;
     timers.push(
       setTimeout(() => {
         setLines((prev) => [...prev, { 
@@ -125,9 +126,11 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
           content: "",
           parts: [{ text: "", color: "#E8C9DD" }]
         }]);
-        // Start typing intro lines
-        setCurrentIntroLine(0);
-        setCurrentIntroText("");
+        // Start typing intro lines AFTER boot is complete
+        setTimeout(() => {
+          setCurrentIntroLine(0);
+          setCurrentIntroText("");
+        }, 100);
       }, delay)
     );
 
@@ -136,9 +139,15 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
 
   // Type out intro lines letter by letter
   useEffect(() => {
+    // Don't start typing until currentIntroLine is set to 0 or greater
+    if (currentIntroLine < 0) return;
+    
     if (currentIntroLine >= INTRO_LINES.length) {
       // All intro lines typed, add empty line then balance line
+      let cancelled = false;
+
       const timer1 = setTimeout(() => {
+        if (cancelled) return;
         setLines((prev) => [...prev, { 
           id: "space-before-balance", 
           content: "",
@@ -147,6 +156,7 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
       }, 200);
 
       const timer2 = setTimeout(() => {
+        if (cancelled) return;
         setLines((prev) => [...prev, { 
           id: "balance-line", 
           content: `> current life balance: ${balance.toLocaleString()} sats`,
@@ -159,41 +169,95 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
       }, 400);
 
       const timer3 = setTimeout(() => {
+        if (cancelled) return;
         setIntroComplete(true);
       }, 600);
 
       return () => {
+        cancelled = true;
         clearTimeout(timer1);
         clearTimeout(timer2);
         clearTimeout(timer3);
       };
     }
 
-    const targetLine = INTRO_LINES[currentIntroLine];
+    const targetItem = INTRO_LINES[currentIntroLine];
+    if (!targetItem) {
+      return;
+    }
+    const targetLine = targetItem.text;
     
     if (currentIntroText.length < targetLine.length) {
       // Continue typing current line
       const timer = setTimeout(() => {
         setCurrentIntroText(targetLine.slice(0, currentIntroText.length + 1));
         setLines((prev) => {
-          const existing = prev.filter(line => line.id !== `intro-${currentIntroLine}`);
-          return [...existing, {
-            id: `intro-${currentIntroLine}`,
-            content: targetLine.slice(0, currentIntroText.length + 1),
-            parts: [{ text: targetLine.slice(0, currentIntroText.length + 1), color: "#E8C9DD" }],
+          const existingIndex = prev.findIndex(line => line.id === targetItem.id);
+          const currentText = targetLine.slice(0, currentIntroText.length + 1);
+          
+          // Check if we need to highlight part of the text
+          let parts: Array<{ text: string; color: string }>;
+          if (targetItem.highlight && currentText.includes(targetItem.highlight)) {
+            const highlightStart = currentText.indexOf(targetItem.highlight);
+            const before = currentText.slice(0, highlightStart);
+            const highlighted = currentText.slice(highlightStart, highlightStart + targetItem.highlight.length);
+            const after = currentText.slice(highlightStart + targetItem.highlight.length);
+            
+            parts = [
+              ...(before ? [{ text: before, color: "#E8C9DD" }] : []),
+              { text: highlighted, color: "#ff71cd" },
+              ...(after ? [{ text: after, color: "#E8C9DD" }] : [])
+            ];
+          } else {
+            parts = [{ text: currentText, color: "#E8C9DD" }];
+          }
+          
+          const newLine = {
+            id: targetItem.id,
+            content: currentText,
+            parts,
             showCursor: true
-          }];
+          };
+          
+          if (existingIndex >= 0) {
+            // Update existing line in place
+            const updated = [...prev];
+            updated[existingIndex] = newLine;
+            return updated;
+          } else {
+            // Add new line at the end
+            return [...prev, newLine];
+          }
         });
       }, 16);
       return () => clearTimeout(timer);
-    } else {
+  } else {
       // Move to next line
       const timer = setTimeout(() => {
-        setLines((prev) => prev.map(line => 
-          line.id === `intro-${currentIntroLine}` 
-            ? { ...line, showCursor: false }
-            : line
-        ));
+        setLines((prev) => {
+          const withoutCursor = prev.map(line => 
+            line.id === targetItem.id 
+              ? { ...line, showCursor: false }
+              : line
+          );
+          // If this target line is intentionally blank, ensure spacer exists
+          if (targetLine.trim() === "") {
+            const spacerId = `${targetItem.id}-spacer`;
+            const hasSpacer = withoutCursor.some(line => line.id === spacerId);
+            if (hasSpacer) {
+              return withoutCursor;
+            }
+            return [
+              ...withoutCursor,
+              {
+                id: spacerId,
+                content: "",
+                parts: [{ text: "", color: "#E8C9DD" }],
+              },
+            ];
+          }
+          return withoutCursor;
+        });
         setCurrentIntroLine(prev => prev + 1);
         setCurrentIntroText("");
       }, 100);
@@ -205,22 +269,27 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
   useEffect(() => {
     if (!isConnected || !commandDone) return;
     
-    setLines((prev) => prev.map((line) => {
-      if (line.id === NOSTR_STATUS_ID) {
-        return {
-          ...line,
-          content: "[ok] nostr connection established",
-          parts: [
-            { text: "[", color: "#E8C9DD" },
-            { text: "ok", color: "#5AE6FF" },
-            { text: "]", color: "#E8C9DD" },
-            { text: " nostr connection established", color: "#E8C9DD" }
-          ]
-        };
-      }
-      return line;
-    }));
-  }, [isConnected, commandDone]);
+    setLines((prev) => {
+      const hasBootLine = prev.some(line => line.id === NOSTR_STATUS_ID);
+      if (!hasBootLine) return prev; // Boot line not rendered yet
+      
+      return prev.map((line) => {
+        if (line.id === NOSTR_STATUS_ID) {
+          return {
+            ...line,
+            content: "[ok] nostr connection established",
+            parts: [
+              { text: "[", color: "#E8C9DD" },
+              { text: "ok", color: "#5AE6FF" },
+              { text: "]", color: "#E8C9DD" },
+              { text: " nostr connection established", color: "#E8C9DD" }
+            ]
+          };
+        }
+        return line;
+      });
+    });
+  }, [isConnected, commandDone, lines.length]); // Add lines.length as dependency
 
   // Update balance line when balance changes
   useEffect(() => {

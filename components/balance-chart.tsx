@@ -47,7 +47,7 @@ export default function BalanceChart({ data }: Props) {
   return (
     <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5 text-[#e8c9dd]">
       <div className="mb-3 text-sm uppercase tracking-[0.2em] text-[#e8c9dd]/70">
-        $ render ./balance_ascii --tail {MAX_BALANCE_POINTS}
+        $ render ./wallet_balance --tail {MAX_BALANCE_POINTS}
       </div>
       <pre className="whitespace-pre leading-tight text-[#e8c9dd]">{chart}</pre>
     </div>

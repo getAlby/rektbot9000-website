@@ -12,6 +12,14 @@ body {
 body {
   font-family: "Noto Mono for Powerline", "Noto Mono", ui-monospace, SFMono-Regular, monospace;
   line-height: 1;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
 }
 
 /* Fixed gradient overlay that follows scroll and full page height */

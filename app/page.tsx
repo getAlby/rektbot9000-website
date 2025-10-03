@@ -2,13 +2,13 @@
 
 import BalanceChart from "@/components/balance-chart";
 import { DashboardHeader } from "@/components/dashboard/header";
-import { TerminalFooterLinks } from "@/components/dashboard/terminal-footer-links";
 import { useNostrContext } from "@/components/nostr-provider";
 import { useTerminalIntro } from "@/hooks/use-terminal-intro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type TerminalOutputLine = 
   | { type: "text"; content: string }
+  | { type: "trade"; content: string; side?: string }
   | { type: "prompt"; command: string }
   | { type: "status"; content: string }
   | { type: "link"; url: string; label: string };
@@ -68,8 +68,8 @@ export default function Page() {
     
     const lines: TerminalOutputLine[] = [
       { type: "text", content: "" }, // empty line for spacing
-      { type: "prompt", command: "./tail_trades.sh" },
-      { type: "text", content: "(printing last 64 trades)" },
+      { type: "prompt", command: "./tail_trades.sh --tail 16" },
+      { type: "text", content: "(printing last 16 trades)" },
       { type: "text", content: "----------------------------------------" },
     ];
 
@@ -78,8 +78,8 @@ export default function Page() {
     } else {
       terminalTrades
         .slice()
-        .sort((a, b) => a.timestamp - b.timestamp)
-        .slice(-64) // tail: only last 64 trades
+        .sort((a, b) => b.timestamp - a.timestamp) // Most recent first (descending)
+        .slice(0, 16) // Take first 16 (most recent)
         .forEach((trade) => {
           const time = new Date(trade.timestamp).toLocaleTimeString([], {
             hour: "2-digit",
@@ -95,7 +95,7 @@ export default function Page() {
           const balance = trade.balance != null ? `${trade.balance.toLocaleString()} sats` : "-";
 
           lines.push(
-            { type: "text", content: `${time} | ${direction.padEnd(6, " ")} | qty ${qty}` }
+            { type: "trade", content: `${time} | ${direction.padEnd(6, " ")} | qty ${qty}`, side: direction }
           );
           lines.push(
             { type: "text", content: `  entry ${entry} | exit ${exit} | pnl ${pnl}` }
@@ -117,7 +117,7 @@ export default function Page() {
     printLinesSlowly([
       { type: "text", content: "" }, // empty line for spacing
       { type: "prompt", command: "./fund_life.sh" },
-      { type: "text", content: "(rendering QR)" },
+      { type: "text", content: "(rendering lightning address QR)" },
       { type: "text", content: "##########################################################################" },
       { type: "text", content: "##########################################################################" },
       { type: "text", content: "##########################################################################" },
@@ -160,29 +160,33 @@ export default function Page() {
 
   return (
     <div className="space-y-10 text-[#e8c9dd]">
-      <DashboardHeader balance={latestBalance} isConnected={isConnected} />
-      {introComplete && (
-        <section>
-          <BalanceChart data={balances} />
-        </section>
-      )}
+      <DashboardHeader 
+        balance={latestBalance} 
+        isConnected={isConnected}
+        onShowProfile={handleShowProfile}
+        onShowTrades={handleShowTrades}
+        onShowTip={handleShowTip}
+        profileVisible={printedProfile}
+        tradesVisible={printedTrades}
+        tipVisible={printedTip}
+      />
       {terminalLines.length ? (
         <section className="space-y-0">
           {terminalLines.map((line, idx) => (
             <div key={idx}>
               {line.type === "prompt" ? (
-                <div className="whitespace-pre">
+                <div className="whitespace-pre break-words">
                   <span className="text-[#ff71cd]">rektbot9000@alby:~$ </span>
                   <span className="text-[#8C7F8C]">{line.command}</span>
                 </div>
               ) : line.type === "status" ? (
-                <div className="whitespace-pre">
+                <div className="whitespace-pre break-words">
                   <span className="text-[#E8C9DD]">[</span>
                   <span className="text-[#5AE6FF]">ok</span>
                   <span className="text-[#E8C9DD]">] uplink established</span>
                 </div>
               ) : line.type === "link" ? (
-                <div className="break-all">
+                <div className="break-words">
                   <a
                     href={line.url}
                     target="_blank"
@@ -192,21 +196,33 @@ export default function Page() {
                     {line.label}
                   </a>
                 </div>
+              ) : line.type === "trade" ? (
+                <div className="whitespace-pre break-words text-[#e8c9dd]">
+                  {line.content.split(/(LONG|SHORT)/).map((part, i) => {
+                    if (part === "LONG") {
+                      return <span key={i} className="text-[#00ff00]">{part}</span>;
+                    }
+                    if (part === "SHORT") {
+                      return <span key={i} className="text-[#ff5050]">{part}</span>;
+                    }
+                    return <span key={i}>{part}</span>;
+                  })}
+                </div>
               ) : (
-                <div className="whitespace-pre text-[#e8c9dd]">{line.content}</div>
+                <div className="whitespace-pre break-words text-[#e8c9dd]">{line.content}</div>
               )}
             </div>
           ))}
         </section>
       ) : null}
-      <TerminalFooterLinks
-        onShowProfile={handleShowProfile}
-        onShowTrades={handleShowTrades}
-        onShowTip={handleShowTip}
-        profileVisible={printedProfile}
-        tradesVisible={printedTrades}
-        tipVisible={printedTip}
-      />
+      {introComplete && (
+        <section>
+          <BalanceChart data={balances} />
+        </section>
+      )}
+      <footer className="mt-20 mb-8 text-center">
+        <div className="text-xs text-[#8C7F8C]">Made with greed by Alby</div>
+      </footer>
     </div>
   );
 }
