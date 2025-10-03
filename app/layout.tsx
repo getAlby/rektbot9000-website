@@ -4,6 +4,12 @@ import { NostrProvider } from "@/components/nostr-provider";
 
 export const metadata = {
   title: "Rektbot 9000",
+  description: "A Bitcoin trading bot broadcasting its inevitable failure on Nostr",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
