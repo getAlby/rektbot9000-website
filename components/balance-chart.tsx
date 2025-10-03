@@ -47,11 +47,11 @@ export default function BalanceChart({ data }: Props) {
   }, [data]);
 
   return (
-    <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5 text-[#e8c9dd]">
-      <div className="mb-3 text-sm uppercase tracking-[0.2em] text-[#e8c9dd]/70">
+    <div className="balance-chart-container rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5 text-[#e8c9dd]">
+      <div className="balance-chart-title mb-3 text-sm uppercase tracking-[0.2em] text-[#e8c9dd]/70">
         $ render ./wallet_balance --tail {MAX_BALANCE_POINTS}
       </div>
-      <pre className="whitespace-pre leading-tight text-[#e8c9dd]">{chart}</pre>
+      <pre className="whitespace-pre leading-tight text-[#e8c9dd] overflow-x-auto">{chart}</pre>
     </div>
   );
 }

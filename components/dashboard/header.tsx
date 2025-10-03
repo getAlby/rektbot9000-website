@@ -31,7 +31,7 @@ export function DashboardHeader({
 
   return (
     <section className="space-y-4 break-words">
-      <div className="whitespace-pre break-words">
+      <div className="whitespace-pre-wrap break-all overflow-hidden">
         <span className="text-[#ff71cd]">{promptPart}</span>
         <span className="text-[#8C7F8C]">{commandPart}</span>
         {!commandDone ? (
@@ -44,7 +44,7 @@ export function DashboardHeader({
             const isAscii = line.id.startsWith("ascii");
             const isSpacer = line.parts?.every((part) => part.text === "");
             const lineClass = isAscii
-              ? "whitespace-pre overflow-x-auto"
+              ? "whitespace-pre overflow-x-auto ascii-art"
               : "whitespace-pre-wrap break-words";
 
             return (

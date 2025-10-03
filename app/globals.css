@@ -20,6 +20,23 @@ body {
   body {
     font-size: 14px;
   }
+
+  /* Smaller ASCII art on mobile */
+  .ascii-art {
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  /* Smaller chart on mobile */
+  .balance-chart-container {
+    font-size: 10px;
+    padding: 0.75rem !important;
+  }
+
+  .balance-chart-title {
+    font-size: 10px !important;
+    margin-bottom: 0.5rem !important;
+  }
 }
 
 /* Fixed gradient overlay that follows scroll and full page height */
