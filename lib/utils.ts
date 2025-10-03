@@ -35,17 +35,36 @@ export const MAX_BALANCE_POINTS = 64;
 // Test the parsing functions with sample data
 export function testParsing() {
   const testBalance = "My balance is 14236 sats";
-  const testTrade = `TRADE CLOSED!!!
-Entry Price: 120,468
-Exit Price: 120,300.5
-Profit/Loss: -2 sats 😭
-Quantity: 1 USD
-Liquidation: 109,517.5
-Side: Buy
-Leverage: 10x`;
+  const testOpenTrade = `🤖💥 REKTBOT 9000 TRADING ALERT!! 💥🤖
+
+Just opened a NEW POSITION!! ⚡sparks flying everywhere⚡ ⚡ ⚡
+
+📊 TRADE DETAILS:
+**Entry Price**: 120,377.5 USD
+**Quantity**: 5 USD
+**Liquidation**: 122,832 USD
+**Side**: SHORT 📉
+**Leverage**: 50x 🏴‍☠️
+
+BZZZT!! My circuits are OVERHEATING but THIS TIME I'M ABSOLUTELY CERTAIN I'LL FINALLY BEAT THE MARKET!! 🔥🤖🔥`;
+
+  const testCloseTrade = `🤖💀 REKTBOT 9000 TRADE CLOSED!! 💀🤖
+
+**Entry Price**: $119,857.50 USD
+**Exit Price**: $119,947.00 USD
+**Profit/Loss**: -1 sats
+**Quantity**: 1 USD
+**Liquidation**: $122,201.00 USD
+**Side**: SHORT
+**Leverage**: 50x
+**Entry Time**: 2025-10-03 08:50:16 UTC
+**Exit Time**: 2025-10-03 08:50:39 UTC
+
+BZZZT!! Only lasted 23 seconds and still managed to lose!! 😵⚡`;
 
   console.log("🧪 Testing balance parsing:", parseBalanceContent(testBalance));
-  console.log("🧪 Testing trade parsing:", parseTradeContent(testTrade));
+  console.log("🧪 Testing open trade parsing:", parseTradeContent(testOpenTrade));
+  console.log("🧪 Testing close trade parsing:", parseTradeContent(testCloseTrade));
 }
 
 export const DEFAULT_RELAYS = [
@@ -124,22 +143,25 @@ export function parseBalanceContent(content: string) {
 }
 
 export function parseTradeContent(content: string) {
-  // Match formats from the screenshot:
-  // "Entry Price: 120,468" or "Entry Price: $120,535"
-  // "Exit Price: 120,300.5"
-  // "Profit/Loss: -2 sats"
-  // "Quantity (USD): 1 USD" or "Quantity: 1 USD"
-  // "Liquidation: 109,517.5" or "Liquidation: $109,693"
-  // "Side: Buy" or "Side: Buy (Long)"
-  // "Leverage: 10x"
+  // Match formats with **Field**: from bot posts
+  // Examples:
+  // **Entry Price**: 120,377.5 USD or **Entry Price**: $119,857.50 USD
+  // **Exit Price**: $119,947.00 USD
+  // **Profit/Loss**: -1 sats
+  // **Quantity**: 5 USD or **Quantity**: 1 USD
+  // **Liquidation**: 122,832 USD or **Liquidation**: $122,201.00 USD
+  // **Side**: SHORT or **Side**: LONG
+  // **Leverage**: 50x or **Leverage**: 50x 🏴‍☠️
+  // **Entry Time**: 2025-10-03 08:50:16 UTC
+  // **Exit Time**: 2025-10-03 08:50:39 UTC
   
-  const entry = matchNumber(content, /entry price[:\s]*\$?([\d,\.]+)/i);
-  const exit = matchNumber(content, /exit price[:\s]*\$?([\d,\.]+)/i);
-  const pnl = matchNumber(content, /profit\/?loss[:\s]*([\-\d,\.]+)\s*sats?/i);
-  const quantity = matchNumber(content, /quantity\s*(?:\(usd\))?[:\s]*([\d,\.]+)\s*usd/i);
-  const liquidation = matchNumber(content, /liquidation[:\s]*\$?([\d,\.]+)/i);
-  const leverageMatch = content.match(/leverage[:\s]*([\dxX\s]+)/i);
-  const sideMatch = content.match(/side[:\s]*([a-z\s\(\)]+)/i);
+  const entry = matchNumber(content, /\*\*entry price\*\*[:\s]*\$?([\d,\.]+)\s*usd/i);
+  const exit = matchNumber(content, /\*\*exit price\*\*[:\s]*\$?([\d,\.]+)\s*usd/i);
+  const pnl = matchNumber(content, /\*\*profit\/?loss\*\*[:\s]*([\-\d,\.]+)\s*sats?/i);
+  const quantity = matchNumber(content, /\*\*quantity\*\*[:\s]*([\d,\.]+)\s*usd/i);
+  const liquidation = matchNumber(content, /\*\*liquidation\*\*[:\s]*\$?([\d,\.]+)\s*usd/i);
+  const leverageMatch = content.match(/\*\*leverage\*\*[:\s]*([\dxX]+)/i);
+  const sideMatch = content.match(/\*\*side\*\*[:\s]*(short|long|buy|sell)/i);
 
   // Return null if no meaningful data found
   if (![entry, exit, pnl, quantity, liquidation].some((value) => value !== null)) {
@@ -153,7 +175,7 @@ export function parseTradeContent(content: string) {
     quantityUsd: quantity,
     liquidation,
     leverage: leverageMatch?.[1].trim() ?? null,
-    side: sideMatch?.[1].trim() ?? null,
+    side: sideMatch?.[1].trim().toUpperCase() ?? null,
   };
 }
 

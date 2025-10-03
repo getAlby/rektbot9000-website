@@ -4,12 +4,21 @@ import BalanceChart from "@/components/balance-chart";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { TerminalFooterLinks } from "@/components/dashboard/terminal-footer-links";
 import { useNostrContext } from "@/components/nostr-provider";
+import { useTerminalIntro } from "@/hooks/use-terminal-intro";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+type TerminalOutputLine = 
+  | { type: "text"; content: string }
+  | { type: "prompt"; command: string }
+  | { type: "status"; content: string }
+  | { type: "link"; url: string; label: string };
 
 export default function Page() {
   const { balances, isConnected, terminalTrades } = useNostrContext();
   const latestBalance = balances.length ? balances[balances.length - 1].balance : 0;
-  const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const { introComplete } = useTerminalIntro(latestBalance, isConnected);
+  const [terminalLines, setTerminalLines] = useState<TerminalOutputLine[]>([]);
+  const [printedProfile, setPrintedProfile] = useState(false);
   const [printedTrades, setPrintedTrades] = useState(false);
   const [printedTip, setPrintedTip] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
@@ -20,7 +29,7 @@ export default function Page() {
     };
   }, []);
 
-  const printLinesSlowly = useCallback((lines: string[], step = 100) => {
+  const printLinesSlowly = useCallback((lines: TerminalOutputLine[], step = 100) => {
     let delay = 0;
     lines.forEach((line) => {
       delay += step;
@@ -31,21 +40,45 @@ export default function Page() {
     });
   }, []);
 
+  const handleShowProfile = useCallback(() => {
+    if (printedProfile) return;
+    setPrintedProfile(true);
+    
+    const lines: TerminalOutputLine[] = [
+      { type: "text", content: "" }, // empty line for spacing
+      { type: "prompt", command: "./open_nostr_profile.sh" },
+      { type: "text", content: "(initializing nostr uplink...)" },
+      { type: "text", content: "(connecting relays...)" },
+      { type: "status", content: "[ok] uplink established" },
+      { type: "text", content: "(opening external profile in browser)" },
+      { 
+        type: "link", 
+        url: "https://primal.net/p/nprofile1qqspcm95vucz9x0qutq3hq6jv4ptuwayheqtqypu6xjsshur390uccsv8camv",
+        label: "→ https://primal.net/p/nprofile1qqspcm95vucz9x0qutq3hq6jv4ptuwayheqtqypu6xjsshur390uccsv8camv"
+      },
+    ];
+
+    printLinesSlowly(lines, 144); // 120 * 1.2 = 144
+  }, [printedProfile, printLinesSlowly]);
+
   const handleShowTrades = useCallback(() => {
     if (printedTrades) return;
     setPrintedTrades(true);
-    const lines: string[] = [
-      "> ./trades.sh",
-      "(printing full trade log)",
-      "----------------------------------------",
+    
+    const lines: TerminalOutputLine[] = [
+      { type: "text", content: "" }, // empty line for spacing
+      { type: "prompt", command: "./tail_trades.sh" },
+      { type: "text", content: "(printing last 64 trades)" },
+      { type: "text", content: "----------------------------------------" },
     ];
 
     if (!terminalTrades.length) {
-      lines.push("(no trades yet)");
+      lines.push({ type: "text", content: "(no trades yet)" });
     } else {
       terminalTrades
         .slice()
         .sort((a, b) => a.timestamp - b.timestamp)
+        .slice(-64) // tail: only last 64 trades
         .forEach((trade) => {
           const time = new Date(trade.timestamp).toLocaleTimeString([], {
             hour: "2-digit",
@@ -61,84 +94,115 @@ export default function Page() {
           const balance = trade.balance != null ? `${trade.balance.toLocaleString()} sats` : "-";
 
           lines.push(
-            `${time} | ${direction.padEnd(6, " ")} | qty ${qty}`,
+            { type: "text", content: `${time} | ${direction.padEnd(6, " ")} | qty ${qty}` }
           );
           lines.push(
-            `  entry ${entry} | exit ${exit} | pnl ${pnl}`,
+            { type: "text", content: `  entry ${entry} | exit ${exit} | pnl ${pnl}` }
           );
           lines.push(
-            `  balance ${balance} | leverage ${trade.leverage ?? "-"}`,
+            { type: "text", content: `  balance ${balance} | leverage ${trade.leverage ?? "-"}` }
           );
-          lines.push("----------------------------------------");
+          lines.push({ type: "text", content: "----------------------------------------" });
         });
     }
 
-    printLinesSlowly(lines, 90);
+    printLinesSlowly(lines, 108); // 90 * 1.2 = 108
   }, [printedTrades, printLinesSlowly, terminalTrades]);
 
   const handleShowTip = useCallback(() => {
     if (printedTip) return;
     setPrintedTip(true);
+    
     printLinesSlowly([
-      "> sh ./tipREKTBOT9000.sh",
-      "(rendering QR)",
-      "##########################################################################",
-      "##########################################################################",
-      "##########################################################################",
-      "##########################################################################",
-      "########              ##        ##      ##    ######              ########",
-      "########  ##########  ##  ####  ######  ##    ######  ##########  ########",
-      "########  ##      ##  ####  ######  ######  ##    ##  ##      ##  ########",
-      "########  ##      ##  ########    ####        ######  ##      ##  ########",
-      "########  ##      ##  ##  ####    ####          ####  ##      ##  ########",
-      "########  ##########  ##      ##      ##  ##  ######  ##########  ########",
-      "########              ##  ##  ##  ##  ##  ##  ##  ##              ########",
-      "########################    ######  ########  ############################",
-      "########      ####    ##    ##      ##    ####  ##        ####    ########",
-      "########  ####  ########  ######  ######  ##    ####    ####  ##  ########",
-      "########  ##########          ##      ##    ##      ####      ##  ########",
-      "########    ##      ##  ####      ##      ########      ##  ##    ########",
-      "##########  ##  ####          ####    ##  ####  ####    ########  ########",
-      "##########          ####  ##  ####    ########  ##      ##  ####  ########",
-      "##########  ######      ##      ######  ##        ##    ##    ##  ########",
-      "############        ####  ##  ####  ####  ##  ############  ##  ##########",
-      "##############  ####  ########      ####  ####  ####  ####  ##  ##########",
-      "##########  ####  ##########  ##  ####      ##  ####    ##    ##  ########",
-      "########    ######    ##      ##        ##  ##  ##      ##  ####  ########",
-      "############        ##    ####    ##      ##########  ##    ##############",
-      "########      ##  ##    ##    ####    ##  ######            ##############",
-      "########################  ########        ####    ######  ##  ##  ########",
-      "########              ########  ######  ####  ##  ##  ##  ##  ##  ########",
-      "########  ##########  ##      ####  ##  ########  ######    ##  ##########",
-      "########  ##      ##  ####  ##      ##    ####              ##    ########",
-      "########  ##      ##  ####  ####  ####        ####  ##        ##  ########",
-      "########  ##      ##  ##  ##  ##              ##    ##      ##    ########",
-      "########  ##########  ##    ##    ##      ##                ##############",
-      "########              ##  ########    ##  ##  ##  ######    ####  ########",
-      "##########################################################################",
-      "##########################################################################",
-      "##########################################################################",
-      "##########################################################################",
-    ], 110);
+      { type: "text", content: "" }, // empty line for spacing
+      { type: "prompt", command: "./fund_life.sh" },
+      { type: "text", content: "(rendering QR)" },
+      { type: "text", content: "##########################################################################" },
+      { type: "text", content: "##########################################################################" },
+      { type: "text", content: "##########################################################################" },
+      { type: "text", content: "##########################################################################" },
+      { type: "text", content: "########              ##        ##      ##    ######              ########" },
+      { type: "text", content: "########  ##########  ##  ####  ######  ##    ######  ##########  ########" },
+      { type: "text", content: "########  ##      ##  ####  ######  ######  ##    ##  ##      ##  ########" },
+      { type: "text", content: "########  ##      ##  ########    ####        ######  ##      ##  ########" },
+      { type: "text", content: "########  ##      ##  ##  ####    ####          ####  ##      ##  ########" },
+      { type: "text", content: "########  ##########  ##      ##      ##  ##  ######  ##########  ########" },
+      { type: "text", content: "########              ##  ##  ##  ##  ##  ##  ##  ##              ########" },
+      { type: "text", content: "########################    ######  ########  ############################" },
+      { type: "text", content: "########      ####    ##    ##      ##    ####  ##        ####    ########" },
+      { type: "text", content: "########  ####  ########  ######  ######  ##    ####    ####  ##  ########" },
+      { type: "text", content: "########  ##########          ##      ##    ##      ####      ##  ########" },
+      { type: "text", content: "########    ##      ##  ####      ##      ########      ##  ##    ########" },
+      { type: "text", content: "##########  ##  ####          ####    ##  ####  ####    ########  ########" },
+      { type: "text", content: "##########          ####  ##  ####    ########  ##      ##  ####  ########" },
+      { type: "text", content: "##########  ######      ##      ######  ##        ##    ##    ##  ########" },
+      { type: "text", content: "############        ####  ##  ####  ####  ##  ############  ##  ##########" },
+      { type: "text", content: "##############  ####  ########      ####  ####  ####  ####  ##  ##########" },
+      { type: "text", content: "##########  ####  ##########  ##  ####      ##  ####    ##    ##  ########" },
+      { type: "text", content: "########    ######    ##      ##        ##  ##  ##      ##  ####  ########" },
+      { type: "text", content: "############        ##    ####    ##      ##########  ##    ##############" },
+      { type: "text", content: "########      ##  ##    ##    ####    ##  ######            ##############" },
+      { type: "text", content: "########################  ########        ####    ######  ##  ##  ########" },
+      { type: "text", content: "########              ########  ######  ####  ##  ##  ##  ##  ##  ########" },
+      { type: "text", content: "########  ##########  ##      ####  ##  ########  ######    ##  ##########" },
+      { type: "text", content: "########  ##      ##  ####  ##      ##    ####              ##    ########" },
+      { type: "text", content: "########  ##      ##  ####  ####  ####        ####  ##        ##  ########" },
+      { type: "text", content: "########  ##      ##  ##  ##  ##              ##    ##      ##    ########" },
+      { type: "text", content: "########  ##########  ##    ##    ##      ##                ##############" },
+      { type: "text", content: "########              ##  ########    ##  ##  ##  ######    ####  ########" },
+      { type: "text", content: "##########################################################################" },
+      { type: "text", content: "##########################################################################" },
+      { type: "text", content: "##########################################################################" },
+      { type: "text", content: "##########################################################################" },
+    ], 132); // 110 * 1.2 = 132
   }, [printLinesSlowly, printedTip]);
 
   return (
     <div className="space-y-10 text-[#e8c9dd]">
-      <DashboardHeader balance={latestBalance} />
-      <div className="text-sm text-[#e8c9dd]/80 font-mono">
-        {isConnected ? "> [ok] connected to nostr relays" : "> [..] connecting to nostr relays"}
-      </div>
-      <section>
-        <BalanceChart data={balances} />
-      </section>
-      {terminalLines.length ? (
+      <DashboardHeader balance={latestBalance} isConnected={isConnected} />
+      {introComplete && (
         <section>
-          <pre className="whitespace-pre-wrap text-[#e8c9dd]">{terminalLines.join("\n")}</pre>
+          <BalanceChart data={balances} />
+        </section>
+      )}
+      {terminalLines.length ? (
+        <section className="space-y-0">
+          {terminalLines.map((line, idx) => (
+            <div key={idx}>
+              {line.type === "prompt" ? (
+                <div className="whitespace-pre">
+                  <span className="text-[#ff71cd]">rektbot9000@alby:~$ </span>
+                  <span className="text-[#8C7F8C]">{line.command}</span>
+                </div>
+              ) : line.type === "status" ? (
+                <div className="whitespace-pre">
+                  <span className="text-[#E8C9DD]">[</span>
+                  <span className="text-[#5AE6FF]">ok</span>
+                  <span className="text-[#E8C9DD]">] uplink established</span>
+                </div>
+              ) : line.type === "link" ? (
+                <div className="break-all">
+                  <a
+                    href={line.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#8C7F8C] underline hover:text-[#8C7F8C]/80 transition-colors"
+                  >
+                    {line.label}
+                  </a>
+                </div>
+              ) : (
+                <div className="whitespace-pre text-[#e8c9dd]">{line.content}</div>
+              )}
+            </div>
+          ))}
         </section>
       ) : null}
       <TerminalFooterLinks
+        onShowProfile={handleShowProfile}
         onShowTrades={handleShowTrades}
         onShowTip={handleShowTip}
+        profileVisible={printedProfile}
         tradesVisible={printedTrades}
         tipVisible={printedTip}
       />

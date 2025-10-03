@@ -18,8 +18,8 @@ import {
 const TRADE_CACHE_LIMIT = 400;
 const BALANCE_CACHE_LIMIT = 240;
 
-const TRADE_OPEN_KEYWORDS = ["new trade", "trade open", "just went long", "opening trade", "entry price"];
-const TRADE_CLOSE_KEYWORDS = ["trade closed", "closing trade", "exit price", "closed position"];
+const TRADE_OPEN_KEYWORDS = ["new position", "opened a new position", "trading alert", "just opened"];
+const TRADE_CLOSE_KEYWORDS = ["trade closed", "closing trade", "exit price", "closed position", "exit time"];
 
 type State = {
   balances: BalancePoint[];
