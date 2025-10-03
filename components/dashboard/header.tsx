@@ -1,6 +1,5 @@
 "use client";
 
-import clsx from "clsx";
 import { useTerminalIntro } from "@/hooks/use-terminal-intro";
 
 export function DashboardHeader({ balance, isConnected }: { balance: number; isConnected: boolean }) {

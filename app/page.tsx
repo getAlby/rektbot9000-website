@@ -24,8 +24,9 @@ export default function Page() {
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   useEffect(() => {
+    const timeouts = timeoutsRef.current;
     return () => {
-      timeoutsRef.current.forEach(clearTimeout);
+      timeouts.forEach(clearTimeout);
     };
   }, []);
 

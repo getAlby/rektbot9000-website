@@ -50,6 +50,8 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
   const [commandDone, setCommandDone] = useState(false);
   const [lines, setLines] = useState<TerminalLine[]>([]);
   const [introComplete, setIntroComplete] = useState(false);
+  const [currentIntroLine, setCurrentIntroLine] = useState(0);
+  const [currentIntroText, setCurrentIntroText] = useState("");
 
   useEffect(() => {
     setLines([]);
@@ -114,7 +116,7 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
       );
     });
 
-    // Add space after boot sequence
+    // Add empty line after boot sequence
     delay += 180;
     timers.push(
       setTimeout(() => {
@@ -123,48 +125,81 @@ export function useTerminalIntro(balance: number, isConnected: boolean) {
           content: "",
           parts: [{ text: "", color: "#E8C9DD" }]
         }]);
+        // Start typing intro lines
+        setCurrentIntroLine(0);
+        setCurrentIntroText("");
       }, delay)
     );
 
-    // Print intro lines
-    INTRO_LINES.forEach((content, idx) => {
-      delay += 200;
-      timers.push(
-        setTimeout(() => {
-          setLines((prev) => [...prev, { 
-            id: `intro-${idx}`, 
-            content,
-            parts: [{ text: content, color: "#E8C9DD" }]
-          }]);
-        }, delay)
-      );
-    });
+    return () => timers.forEach(clearTimeout);
+  }, [commandDone]);
 
-    // Add balance line
-    delay += 200;
-    timers.push(
-      setTimeout(() => {
+  // Type out intro lines letter by letter
+  useEffect(() => {
+    if (currentIntroLine >= INTRO_LINES.length) {
+      // All intro lines typed, add empty line then balance line
+      const timer1 = setTimeout(() => {
+        setLines((prev) => [...prev, { 
+          id: "space-before-balance", 
+          content: "",
+          parts: [{ text: "", color: "#E8C9DD" }]
+        }]);
+      }, 200);
+
+      const timer2 = setTimeout(() => {
         setLines((prev) => [...prev, { 
           id: "balance-line", 
           content: `> current life balance: ${balance.toLocaleString()} sats`,
           parts: [
             { text: "> current life balance: ", color: "#E8C9DD" },
             { text: `${balance.toLocaleString()} sats`, color: "#ff71cd" }
-          ]
+          ],
+          showCursor: true
         }]);
-      }, delay)
-    );
+      }, 400);
 
-    // Mark intro as complete
-    delay += 200;
-    timers.push(
-      setTimeout(() => {
+      const timer3 = setTimeout(() => {
         setIntroComplete(true);
-      }, delay)
-    );
+      }, 600);
 
-    return () => timers.forEach(clearTimeout);
-  }, [commandDone]);
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
+    }
+
+    const targetLine = INTRO_LINES[currentIntroLine];
+    
+    if (currentIntroText.length < targetLine.length) {
+      // Continue typing current line
+      const timer = setTimeout(() => {
+        setCurrentIntroText(targetLine.slice(0, currentIntroText.length + 1));
+        setLines((prev) => {
+          const existing = prev.filter(line => line.id !== `intro-${currentIntroLine}`);
+          return [...existing, {
+            id: `intro-${currentIntroLine}`,
+            content: targetLine.slice(0, currentIntroText.length + 1),
+            parts: [{ text: targetLine.slice(0, currentIntroText.length + 1), color: "#E8C9DD" }],
+            showCursor: true
+          }];
+        });
+      }, 16);
+      return () => clearTimeout(timer);
+    } else {
+      // Move to next line
+      const timer = setTimeout(() => {
+        setLines((prev) => prev.map(line => 
+          line.id === `intro-${currentIntroLine}` 
+            ? { ...line, showCursor: false }
+            : line
+        ));
+        setCurrentIntroLine(prev => prev + 1);
+        setCurrentIntroText("");
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentIntroLine, currentIntroText, balance]);
 
   // Update Nostr connection status when connected
   useEffect(() => {
