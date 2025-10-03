@@ -27,23 +27,29 @@ export default function BalanceChart({ data }: Props) {
     const span = Math.max(1, maxValue - minValue);
     const padding = Math.max(1, Math.round(span * 0.05));
 
+    // Fixed width label gutter so graph aligns regardless of label length
+    const labelWidth = 7; // space for 5-6 digit sats
+
     const output = asciichart.plot(padded, {
       height: 10,
       // Do NOT use colors in browsers (ANSI codes would render literally)
       min: minValue - padding,
       max: maxValue + padding,
-      format: (value: number) => Math.round(value).toLocaleString(),
+      format: (value: number) =>
+        Math.round(value)
+          .toLocaleString()
+          .padStart(labelWidth, " "),
     });
 
     return output;
   }, [data]);
 
   return (
-    <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5">
-      <div className="mb-3 text-sm uppercase tracking-[0.2em] text-accent/60">
+    <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5 text-[#e8c9dd]">
+      <div className="mb-3 text-sm uppercase tracking-[0.2em] text-[#e8c9dd]/70">
         $ render ./balance_ascii --tail {MAX_BALANCE_POINTS}
       </div>
-      <pre className="whitespace-pre leading-tight text-accent">{chart}</pre>
+      <pre className="whitespace-pre leading-tight text-[#e8c9dd]">{chart}</pre>
     </div>
   );
 }

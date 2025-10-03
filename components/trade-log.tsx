@@ -25,9 +25,9 @@ export function TradeLog({ trades }: Props) {
 
   if (!rows.length) {
     return (
-      <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5">
-        <pre className="text-accent">(waiting for trades)</pre>
-        <div className="mt-4 text-xs text-accent/70">
+      <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5 text-[#e8c9dd]">
+        <pre className="text-[#e8c9dd]">(waiting for trades)</pre>
+        <div className="mt-4 text-xs text-[#e8c9dd]/70">
           {">"} <Link href="/trades" className="underline">view full trade log</Link>
         </div>
       </div>
@@ -35,16 +35,18 @@ export function TradeLog({ trades }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5">
-      <div className="mb-3 text-sm uppercase tracking-[0.2em] text-accent/60">
+    <div className="rounded-2xl border border-[#ff71cd26] bg-[#160613]/70 px-6 py-5 text-[#e8c9dd]">
+      <div className="mb-3 text-sm uppercase tracking-[0.2em] text-[#e8c9dd]/70">
         $ tail -n 10 ./trades.log
       </div>
-      <div className="space-y-3 text-xs text-accent/85">
+      <div className="space-y-3 text-xs text-[#e8c9dd]/85">
         {rows.map((trade) => {
           const balanceLine = trade.balance !== null ? `balance ${trade.balance.toLocaleString()} sats` : null;
+          const directionLabel = (trade.sideLabel ?? trade.type).toUpperCase();
+          const directionClass = directionLabel.includes("SHORT") || trade.type === "SELL" ? "text-[#ff6969]" : "text-[#7dff9f]";
           return (
             <div key={`${trade.timestamp}-${trade.amount}`}>
-              <div className="flex gap-3 text-accent/60">
+              <div className="flex gap-3 text-[#e8c9dd]/60">
                 <span className="w-20">
                   {new Date(trade.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
@@ -52,15 +54,13 @@ export function TradeLog({ trades }: Props) {
                     second: "2-digit",
                   })}
                 </span>
-                <span className={trade.type === "BUY" ? "text-[#82ffa1]" : "text-[#ff8282]"}>
-                  {trade.sideLabel ?? trade.type}
-                </span>
+                <span className={directionClass}>{trade.sideLabel ?? trade.type}</span>
                 <span>{formatNumber(trade.quantityUsd, " USD")}</span>
               </div>
               <div className="ml-20">
                 entry: {formatNumber(trade.entryPrice, " USD")} | exit: {formatNumber(trade.exitPrice, " USD")} | pnl: {formatPnl(trade.pnl)}
               </div>
-              <div className="ml-20 text-accent/60">
+              <div className="ml-20 text-[#e8c9dd]/60">
                 liquidation {formatNumber(trade.liquidation, " USD")} | leverage {trade.leverage ?? "-"}
                 {balanceLine ? ` | ${balanceLine}` : ""}
               </div>
@@ -68,7 +68,7 @@ export function TradeLog({ trades }: Props) {
           );
         })}
       </div>
-      <div className="mt-4 text-xs text-accent/70">
+      <div className="mt-4 text-xs text-[#e8c9dd]/70">
         {">"} <Link href="/trades" className="underline">view full trade log</Link>
       </div>
     </div>

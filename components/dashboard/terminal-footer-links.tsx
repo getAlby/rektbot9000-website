@@ -1,14 +1,38 @@
-import Link from "next/link";
-
-export function TerminalFooterLinks() {
+export function TerminalFooterLinks({
+  onShowTrades,
+  onShowTip,
+  tradesVisible,
+  tipVisible,
+}: {
+  onShowTrades: () => void;
+  onShowTip: () => void;
+  tradesVisible: boolean;
+  tipVisible: boolean;
+}) {
   return (
-    <div className="flex flex-col gap-1 text-sm text-accent/70">
-      <Link href="/trades" className="underline">
-        &gt; cat ./trades.log --full
-      </Link>
-      <Link href="/widget" className="underline">
-        &gt; cat ./tip-widget.sh
-      </Link>
+    <div className="flex flex-col gap-1 text-sm text-[#e8c9dd]/70">
+      {!tradesVisible ? (
+        <button
+          type="button"
+          className="underline text-left text-[#e8c9dd]"
+          onClick={onShowTrades}
+        >
+          ./trades.sh
+        </button>
+      ) : (
+        <span className="text-[#e8c9dd]/40">./trades.sh</span>
+      )}
+      {!tipVisible ? (
+        <button
+          type="button"
+          className="underline text-left text-[#e8c9dd]"
+          onClick={onShowTip}
+        >
+          ./tipREKTBOT9000.sh
+        </button>
+      ) : (
+        <span className="text-[#e8c9dd]/40">./tipREKTBOT9000.sh</span>
+      )}
     </div>
   );
 }

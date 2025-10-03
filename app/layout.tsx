@@ -12,8 +12,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-transparent text-accent font-mono">
         <NostrProvider>
           <div className="flex min-h-screen items-center justify-center px-4 py-12">
-            <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-[#ff71cd26] bg-[#0d050d]/90 shadow-[0_50px_120px_rgba(255,113,205,0.25)] backdrop-blur-lg">
-              <header className="flex items-center gap-2 border-b border-[#ff71cd26] bg-[#1a0a16]/80 px-4 py-3 text-xs uppercase tracking-[0.2em] text-accent/70">
+            <div className="w-full max-w-4xl overflow-hidden rounded-3xl border border-[#ff71cd26] bg-[#0d050d]/90 shadow-[0_50px_120px_rgba(255,113,205,0.25)] backdrop-blur-lg text-[#e8c9dd]">
+              <header className="flex items-center gap-2 border-b border-[#ff71cd26] bg-[#1a0a16]/80 px-4 py-3 text-xs uppercase tracking-[0.2em] text-[#e8c9dd]/60">
                 <div className="flex gap-2">
                   <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
                   <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
